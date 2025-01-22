@@ -29,8 +29,8 @@ public class KeyValueService {
         if (!reply.isSuccess()) {
             throw new RuntimeException("Read failed");
         }
-        // Deserialize the response from state machine
-        return reply.getMessage().getContent().toStringUtf8();
+        String value = reply.getMessage().getContent().toStringUtf8();
+        return value.isEmpty() ? null : value; // Return null if key not found
     }
 
     public void delete(String key) throws Exception {

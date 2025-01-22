@@ -10,11 +10,13 @@ import org.apache.ratis.protocol.RaftPeerId;
 import org.apache.ratis.server.RaftServer;
 import org.apache.ratis.server.RaftServerConfigKeys;
 import org.apache.ratis.util.NetUtils;
+import org.apache.ratis.util.TimeDuration;
 
 import java.io.File;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 public class RaftConfig {
@@ -28,21 +30,40 @@ public class RaftConfig {
     public static RaftServer.Builder newRaftServer(String nodeId, List<String> peerAddresses, File storageDir) {
         final RaftProperties props = new RaftProperties();
 
-        // Set the port for the Raft server
-        GrpcConfigKeys.Server.setPort(props, NetUtils.createSocketAddr(peerAddresses.get(0)).getPort());
+        // Set longer timeouts for Docker environments
+        RaftServerConfigKeys.Rpc.setTimeoutMin(props, TimeDuration.valueOf(1500, TimeUnit.MILLISECONDS));
+        RaftServerConfigKeys.Rpc.setTimeoutMax(props, TimeDuration.valueOf(3000, TimeUnit.MILLISECONDS));
+        RaftServerConfigKeys.LeaderElection.setLeaderStepDownWaitTime(props, TimeDuration.valueOf(30, TimeUnit.SECONDS));
 
-        // Configure peers using RaftPeer.newBuilder()
+
+        // Parse peers into id, host, port
         List<RaftPeer> peers = peerAddresses.stream()
                 .map(addr -> {
-                    String[] parts = addr.split(":");
+                    String[] parts = addr.split(":", 3);
+                    if (parts.length != 3) {
+                        throw new IllegalArgumentException("Invalid peer format: " + addr);
+                    }
+                    String id = parts[0];
+                    String host = parts[1];
+                    int port = Integer.parseInt(parts[2]);
                     return RaftPeer.newBuilder()
-                            .setId(RaftPeerId.valueOf(parts[0])) // Use the first part as the peer ID
-                            .setAddress(addr) // Use the full address
+                            .setId(id)
+                            .setAddress(host + ":" + port)
                             .build();
                 })
                 .collect(Collectors.toList());
 
-        // Set the storage directory
+        // Set the bind address to 0.0.0.0
+        GrpcConfigKeys.Server.setHost(props, "0.0.0.0");  // Add this line
+
+        // Use the first peer's port for this server
+        int port = peers.stream()
+                .filter(peer -> peer.getId().toString().equals(nodeId))
+                .findFirst()
+                .map(peer -> NetUtils.createSocketAddr(peer.getAddress()).getPort())
+                .orElseThrow(() -> new IllegalArgumentException("Node ID not found in peers"));
+
+        GrpcConfigKeys.Server.setPort(props, port);
         RaftServerConfigKeys.setStorageDir(props, Collections.singletonList(storageDir));
 
         return RaftServer.newBuilder()
@@ -50,5 +71,9 @@ public class RaftConfig {
                 .setProperties(props)
                 .setGroup(getRaftGroup(peers))
                 .setStateMachine(new KeyValueStateMachine());
+    }
+
+    public static RaftGroupId getRaftGroupId() {
+        return RaftGroupId.valueOf(CLUSTER_ID);
     }
 }

@@ -44,9 +44,6 @@ public class KeyValueStateMachine extends BaseStateMachine {
                 case "DELETE":
                     store.remove(parts[1]);
                     break;
-                case "GET":
-                    // Read-only operation
-                    break;
                 default:
                     throw new IllegalArgumentException("Unknown command: " + parts[0]);
             }
@@ -56,7 +53,29 @@ public class KeyValueStateMachine extends BaseStateMachine {
             return CompletableFuture.failedFuture(e);
         }
     }
+    @Override
+    public CompletableFuture<Message> query(Message request) {
+        try {
+            // Extract the content from the request
+            String content = request.getContent().toStringUtf8();
+            // Split into ["GET", "key"]
+            String[] parts = content.split(":", 2);
 
+            if (parts.length < 2 || !"GET".equals(parts[0])) {
+                throw new IllegalArgumentException("Invalid GET command: " + content);
+            }
+
+            String key = parts[1];
+            String value = store.get(key);
+
+            // Return the value or an empty string if not found
+            return CompletableFuture.completedFuture(
+                    Message.valueOf(value != null ? value : "")
+            );
+        } catch (Exception e) {
+            return CompletableFuture.failedFuture(e);
+        }
+    }
 
     public String get(String key) {
         return store.get(key);

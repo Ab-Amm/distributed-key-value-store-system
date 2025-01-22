@@ -1,10 +1,11 @@
 package com.example.distributedkeyvalue.config;
 
+import lombok.RequiredArgsConstructor;
 import org.apache.ratis.client.RaftClient;
+import org.apache.ratis.conf.Parameters;
 import org.apache.ratis.conf.RaftProperties;
 import org.apache.ratis.grpc.GrpcConfigKeys;
 import org.apache.ratis.grpc.GrpcFactory;
-import org.apache.ratis.grpc.GrpcTlsConfig;
 import org.apache.ratis.protocol.ClientId;
 import org.apache.ratis.protocol.RaftGroup;
 import org.apache.ratis.protocol.RaftGroupId;
@@ -19,22 +20,28 @@ import java.util.Arrays;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+
 @Configuration
+@RequiredArgsConstructor
 public class RaftClientConfig {
 
-    @Value("${RAFT_PEERS}")  // Now correctly reads from environment variable
+    @Value("${RAFT_PEERS:node1:localhost:9870}")
     private String[] peers;
 
-    @Value("${RAFT_NODE_ID}")
+    @Value("${RAFT_NODE_ID:default-node}")
     private String raftNodeId;
 
     @Value("${raft.cluster.group-id}")
     private String groupId;
 
+    @Value("${raft.cluster.port}")
+    private int raftPort;
+
+
     @Bean
     public RaftGroup raftGroup() {
         return RaftGroup.valueOf(
-                RaftGroupId.valueOf(UUID.nameUUIDFromBytes(groupId.getBytes())),
+                RaftConfig.getRaftGroupId(),
                 Arrays.stream(peers)
                         .map(peer -> {
                             String[] parts = peer.split(":");
@@ -51,18 +58,21 @@ public class RaftClientConfig {
     public RaftClient raftClient(RaftGroup raftGroup) {
         final RaftProperties properties = new RaftProperties();
 
-        ClientId id = ClientId.valueOf(ByteString.copyFromUtf8(raftNodeId));
         // Configure gRPC parameters
         GrpcConfigKeys.setMessageSizeMax(properties, SizeInBytes.valueOf("64MB"));
         GrpcConfigKeys.setFlowControlWindow(properties, SizeInBytes.valueOf("4MB"));
 
-        GrpcFactory grpcFactory = new GrpcFactory((GrpcTlsConfig) null); // Pass null if TLS is not configured
+        // Ensure ClientId is 16 bytes
+        ClientId clientId = ClientId.valueOf(UUID.nameUUIDFromBytes(raftNodeId.getBytes()));
+
+        GrpcFactory grpcFactory = new GrpcFactory((Parameters) null);
 
         return RaftClient.newBuilder()
-                .setClientId(id)
+                .setClientId(clientId)
                 .setProperties(properties)
                 .setRaftGroup(raftGroup)
-                .setClientRpc(grpcFactory.newRaftClientRpc(id, properties))
+                .setClientRpc(grpcFactory.newRaftClientRpc(clientId, properties))
                 .build();
     }
+
 }
