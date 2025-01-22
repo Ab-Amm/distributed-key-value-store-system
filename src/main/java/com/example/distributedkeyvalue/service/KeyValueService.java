@@ -1,26 +1,45 @@
 package com.example.distributedkeyvalue.service;
 
-import lombok.extern.slf4j.Slf4j;
+import com.example.distributedkeyvalue.model.commands.DeleteCommand;
+import com.example.distributedkeyvalue.model.commands.GetCommand;
+import com.example.distributedkeyvalue.model.commands.PutCommand;
+import org.apache.ratis.client.RaftClient;
+import org.apache.ratis.protocol.RaftClientReply;
 import org.springframework.stereotype.Service;
-import java.util.concurrent.ConcurrentHashMap;
 
 @Service
-@Slf4j
 public class KeyValueService {
-    private final ConcurrentHashMap<String, String> store = new ConcurrentHashMap<>();
+    private final RaftClient raftClient;
 
-    public void put(String key, String value) {
-        log.info("Storing key: {} with value: {}", key, value);
-        store.put(key, value);
+    public KeyValueService(RaftClient raftClient) {
+        this.raftClient = raftClient;
     }
 
-    public String get(String key) {
-        log.info("Retrieving value for key: {}", key);
-        return store.get(key);
+    public void put(String key, String value) throws Exception {
+        RaftClientReply reply = raftClient.io().send(
+                new PutCommand(key, value)
+        );
+        if (!reply.isSuccess()) {
+            throw new RuntimeException("Write failed");
+        }
     }
 
-    public void delete(String key) {
-        log.info("Deleting key: {}", key);
-        store.remove(key);
+    public String get(String key) throws Exception {
+        RaftClientReply reply = raftClient.io().sendReadOnly(new GetCommand(key));
+        if (!reply.isSuccess()) {
+            throw new RuntimeException("Read failed");
+        }
+        // Deserialize the response from state machine
+        return reply.getMessage().getContent().toStringUtf8();
     }
+
+    public void delete(String key) throws Exception {
+        RaftClientReply reply = raftClient.io().send(
+                new DeleteCommand(key)
+        );
+        if (!reply.isSuccess()) {
+            throw new RuntimeException("Delete failed");
+        }
+    }
+
 }

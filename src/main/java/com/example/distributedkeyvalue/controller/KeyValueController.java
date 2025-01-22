@@ -12,17 +12,17 @@ public class KeyValueController {
     private final KeyValueService keyValueService;
 
     @PutMapping("/{key}")
-    public void putKeyValue(@PathVariable String key,@RequestBody String value) {
+    public void putKeyValue(@PathVariable String key,@RequestBody String value) throws Exception {
         keyValueService.put(key, value);
     }
 
     @GetMapping("/{key}")
-    public String getKeyValue(@PathVariable String key) {
+    public String getKeyValue(@PathVariable String key) throws Exception {
         return keyValueService.get(key);
     }
 
     @DeleteMapping("/{key}")
-    public void deleteKeyValue(@PathVariable String key) {
+    public void deleteKeyValue(@PathVariable String key) throws Exception {
         keyValueService.delete(key);
     }
 
