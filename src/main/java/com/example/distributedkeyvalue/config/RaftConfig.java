@@ -20,14 +20,14 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 public class RaftConfig {
-    private static final UUID CLUSTER_ID = UUID.fromString("02511d47-d67c-49a3-9011-abb310949a45");
     private static final String RAFT_GROUP_ID = "kv-store-raft-group";
 
-    public static RaftGroup getRaftGroup(List<RaftPeer> peers) {
-        return RaftGroup.valueOf(RaftGroupId.valueOf(CLUSTER_ID), peers);
+    public static RaftGroup getRaftGroup(String shardId, List<RaftPeer> peers) {
+        UUID clusterId = UUID.nameUUIDFromBytes(shardId.getBytes());
+        return RaftGroup.valueOf(RaftGroupId.valueOf(clusterId), peers);
     }
 
-    public static RaftServer.Builder newRaftServer(String nodeId, List<String> peerAddresses, File storageDir) {
+    public static RaftServer.Builder newRaftServer(String shardId, String nodeId, List<String> peerAddresses, File storageDir) {
         final RaftProperties props = new RaftProperties();
 
         // Set longer timeouts for Docker environments
@@ -69,11 +69,12 @@ public class RaftConfig {
         return RaftServer.newBuilder()
                 .setServerId(RaftPeerId.valueOf(nodeId))
                 .setProperties(props)
-                .setGroup(getRaftGroup(peers))
+                .setGroup(getRaftGroup(shardId, peers))
                 .setStateMachine(new KeyValueStateMachine());
     }
 
-    public static RaftGroupId getRaftGroupId() {
-        return RaftGroupId.valueOf(CLUSTER_ID);
+    public static RaftGroupId getRaftGroupId(String shardId) {
+        UUID clusterId = UUID.nameUUIDFromBytes(shardId.getBytes());
+        return RaftGroupId.valueOf(clusterId);
     }
 }

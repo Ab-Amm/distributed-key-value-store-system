@@ -22,6 +22,9 @@ public class RaftInitializer {
     @Value("${RAFT_PEERS:default-node:localhost:9870}")
     private String peers;
 
+    @Value("${SHARD_ID:default-shard}")
+    private String shardId;
+
     @PostConstruct
     public void init() throws Exception {
         // Parse peer addresses
@@ -29,7 +32,7 @@ public class RaftInitializer {
 
         // Create Raft server
         File storageDir = new File("./raft-storage/" + nodeId);
-        raftServer = RaftConfig.newRaftServer(nodeId, peerAddresses, storageDir).build();
+        raftServer = RaftConfig.newRaftServer(shardId, nodeId, peerAddresses, storageDir).build();
         raftServer.start();
 
         System.out.println("Raft server started on node " + nodeId);

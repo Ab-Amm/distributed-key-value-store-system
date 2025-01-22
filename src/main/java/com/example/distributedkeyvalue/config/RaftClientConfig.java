@@ -31,6 +31,9 @@ public class RaftClientConfig {
     @Value("${RAFT_NODE_ID:default-node}")
     private String raftNodeId;
 
+    @Value("${SHARD_ID:default-shard}")
+    private String shardId;
+
     @Value("${raft.cluster.group-id}")
     private String groupId;
 
@@ -41,7 +44,7 @@ public class RaftClientConfig {
     @Bean
     public RaftGroup raftGroup() {
         return RaftGroup.valueOf(
-                RaftConfig.getRaftGroupId(),
+                RaftConfig.getRaftGroupId(shardId),
                 Arrays.stream(peers)
                         .map(peer -> {
                             String[] parts = peer.split(":");
