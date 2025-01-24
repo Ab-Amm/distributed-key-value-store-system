@@ -29,6 +29,7 @@ public class KeyValueService {
                 key
         );
 
+
         // 2. Extract shardId and nodes
         assert shardInfo != null;
         String shardId = shardInfo.shardId();
