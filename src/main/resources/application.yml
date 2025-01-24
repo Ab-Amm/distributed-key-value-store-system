@@ -1,6 +1,8 @@
 spring:
   application:
     name: distributedKeyValue
+  profiles:
+    active: node  # Default profile (for nodes)
 
 raft:
   cluster:
@@ -10,3 +12,17 @@ raft:
 
 server:
   port: ${SERVER_PORT:8080}
+
+
+shard:
+  registration:
+    enabled: true
+
+
+---
+spring:
+  config:
+    activate:
+      on-profile: manager
+  main:
+    web-application-type: servlet  # Ensure the manager runs as a web server

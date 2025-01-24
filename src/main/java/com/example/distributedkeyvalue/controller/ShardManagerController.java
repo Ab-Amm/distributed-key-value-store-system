@@ -2,9 +2,9 @@ package com.example.distributedkeyvalue.controller;
 
 import com.example.distributedkeyvalue.model.ShardInfo;
 import com.example.distributedkeyvalue.model.ShardRegistrationRequest;
+import org.springframework.context.annotation.Profile;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -13,6 +13,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import static java.util.Objects.hash;
 
 // ShardManagerController.java
+@Profile("manager")
 @RestController
 @RequestMapping("/shard-manager")
 public class ShardManagerController {
@@ -28,11 +29,11 @@ public class ShardManagerController {
         return ResponseEntity.ok(new ShardInfo(shardId, nodes));
     }
 
-    // Add shard (called on node startup)
+
     @PostMapping("/register-shard")
     public void registerShard(@RequestBody ShardRegistrationRequest request) {
-        shardToNodes.put(request.shardId(), request.nodes());
-        for (String node : request.nodes()) {
+        shardToNodes.put(request.shardId(), request.raftNodes());
+        for (String node : request.raftNodes()) {
             long hash = hash(node + request.shardId()); // Virtual node
             shardRing.put(hash, request.shardId());
         }

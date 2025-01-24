@@ -6,30 +6,29 @@ import org.apache.ratis.server.RaftServer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.io.IOException;
-
 @RestController
 public class LeaderController {
-
-    @Value("${SHARD_ID:default-shard}")
-    private String shardId;
-
     private final RaftServer raftServer;
 
-    @Autowired
+    @Autowired(required = false)  // Makes dependency optional
     public LeaderController(RaftServer raftServer) {
         this.raftServer = raftServer;
     }
 
-    @GetMapping("/leader")
-    public String isLeader() throws IOException {
-        // Get the RaftGroupId from your RaftConfig
-        RaftGroupId raftGroupId = RaftConfig.getRaftGroupId(shardId);
-
-        return raftServer.getDivision(raftGroupId).getInfo().isLeader()
-                ? "LEADER"
-                : "FOLLOWER";
+    @GetMapping("/leader/{shardId}")
+    public String isLeader(@PathVariable String shardId) {
+        if (raftServer == null) return "FOLLOWER";
+        try {
+            RaftGroupId raftGroupId = RaftConfig.getRaftGroupId(shardId);
+            return raftServer.getDivision(raftGroupId).getInfo().isLeader()
+                    ? "LEADER"
+                    : "FOLLOWER";
+        } catch (Exception e) {
+            return "ERROR";
+        }
     }
 }

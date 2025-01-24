@@ -1,0 +1,7 @@
+# Configuration specific to Raft nodes
+server:
+  port: 8080
+
+shard:
+  manager:
+    enabled: false
