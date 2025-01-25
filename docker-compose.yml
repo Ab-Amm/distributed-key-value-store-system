@@ -2,9 +2,7 @@ services:
   shard-manager:
     image: distributedkeyvalue_v3:latest  # Same image as nodes
     environment:
-      - SPRING_PROFILES_ACTIVE=manager  # Activate "manager" profile
-    ports:
-      - "8080:8080"
+      - SPRING_PROFILES_ACTIVE=manager
     networks:
       - raft-network
     depends_on:  # Ensure nodes start after the manager
@@ -14,6 +12,20 @@ services:
       - shard2-node1
       - shard2-node2
       - shard2-node3
+
+
+  # Fix port conflict and typo
+  load-balancer:  # Corrected service name
+    image: distributedkeyvalue_v3:latest
+    environment:
+      - SPRING_PROFILES_ACTIVE=loadbalancer
+    ports:
+      - "8080:8080"  # Only expose load balancer
+    networks:
+      - raft-network  # Add to network
+    depends_on:
+      - shard-manager
+
 
   # Shard1 Nodes
   shard1-node1:

@@ -3,11 +3,13 @@ package com.example.distributedkeyvalue.controller;
 import com.example.distributedkeyvalue.service.KeyValueService;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Profile;
 import org.springframework.web.bind.annotation.*;
 
 @RequiredArgsConstructor
 @RestController
-@RequestMapping("/api/v1/keys")
+@Profile("node")
+@RequestMapping("/internal/api/v1/keys")
 public class KeyValueController {
     private final KeyValueService keyValueService;
 

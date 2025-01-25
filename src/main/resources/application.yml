@@ -8,6 +8,10 @@ raft:
   cluster:
     group-id: kv-store-group
     port: 9870
+  client:
+    retry:
+          max-attempts: 5
+          backoff-period: 2000
 
 
 server:
@@ -17,7 +21,6 @@ server:
 shard:
   registration:
     enabled: true
-
 
 ---
 spring:

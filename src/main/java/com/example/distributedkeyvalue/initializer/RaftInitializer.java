@@ -54,20 +54,41 @@ public class RaftInitializer {
     public CommandLineRunner registerWithShardManager() {
         return args -> {
 
-            List<String> raftNodes = Arrays.asList(peers.split(","));
-            List<String> restNodes = Arrays.stream(peers.split(","))
-                    .map(peer -> {
-                        String[] parts = peer.split(":", 3);
-                        return parts[1] + ":8080"; // REST port
-                    })
-                    .collect(Collectors.toList());
 
-            ShardRegistrationRequest request = new ShardRegistrationRequest(shardId, restNodes, raftNodes);
-            try {
-                restTemplate.postForEntity("http://shard-manager:8080/shard-manager/register-shard", request, Void.class);
-            } catch (ResourceAccessException e) {
-                System.err.println("Warning: Failed to register with shard manager - " + e.getMessage());
+            int attempts = 0;
+            while (attempts < 5) {
+                try {
+
+                    List<String> raftNodes = Arrays.asList(peers.split(","));
+                    List<String> restNodes = Arrays.stream(peers.split(","))
+                            .map(peer -> {
+                                String[] parts = peer.split(":", 3);
+                                return parts[1] + ":8080"; // REST port
+                            })
+                            .collect(Collectors.toList());
+
+                    ShardRegistrationRequest request = new ShardRegistrationRequest(shardId, restNodes, raftNodes);
+                    try {
+                        restTemplate.postForEntity("http://shard-manager:8080/shard-manager/register-shard", request, Void.class);
+                    } catch (ResourceAccessException e) {
+                        System.err.println("Warning: Failed to register with shard manager - " + e.getMessage());
+                    }
+
+
+                    break;
+                } catch (Exception e) {
+                    attempts++;
+                    Thread.sleep(3000);
+                }
             }
+
+
+
+
+
+
+
+
         };
     }
 

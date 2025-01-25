@@ -54,8 +54,7 @@ public class RaftConfig {
                 .collect(Collectors.toList());
 
         // Set the bind address to 0.0.0.0
-        GrpcConfigKeys.Server.setHost(props, "0.0.0.0");  // Add this line
-
+        GrpcConfigKeys.Server.setHost(props, "0.0.0.0");
         // Use the first peer's port for this server
         int port = peers.stream()
                 .filter(peer -> peer.getId().toString().equals(nodeId))
