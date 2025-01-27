@@ -1,4 +1,3 @@
-// LoadBalancer.java
 package com.example.distributedkeyvalue.loadBalancer;
 
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
@@ -18,7 +17,7 @@ import java.util.stream.Collectors;
 
 @Component
 public class LoadBalancer {
-    private final Map<String, NodeStatus> nodes = new ConcurrentHashMap<>();
+    public final Map<String, NodeStatus> nodes = new ConcurrentHashMap<>();
     private final ScheduledExecutorService healthCheckExecutor = Executors.newScheduledThreadPool(1);
     private final WebClient healthCheckClient = WebClient.builder()
             .clientConnector(new ReactorClientHttpConnector(
@@ -51,15 +50,21 @@ public class LoadBalancer {
                 this::performHealthChecks,
                 5, 10, TimeUnit.SECONDS
         );
+        healthCheckExecutor.scheduleAtFixedRate(
+                this::removeStaleNodes,
+                15, 15, TimeUnit.SECONDS
+        );
     }
 
-    private static class NodeStatus {
+    public static class NodeStatus {
         volatile boolean healthy;
         final AtomicInteger activeConnections;
+        volatile long lastHeartbeat;
 
         NodeStatus(boolean healthy, AtomicInteger activeConnections) {
             this.healthy = healthy;
             this.activeConnections = activeConnections;
+            this.lastHeartbeat = System.currentTimeMillis();
         }
     }
 
@@ -103,6 +108,14 @@ public class LoadBalancer {
     public void decrementConnections(String node) {
         Optional.ofNullable(nodes.get(node))
                 .ifPresent(status -> status.activeConnections.decrementAndGet());
+    }
+
+    private void removeStaleNodes() {
+        long now = System.currentTimeMillis();
+        nodes.entrySet().removeIf(entry -> {
+            NodeStatus status = entry.getValue();
+            return (now - status.lastHeartbeat) > 15_000;
+        });
     }
 
     @PreDestroy

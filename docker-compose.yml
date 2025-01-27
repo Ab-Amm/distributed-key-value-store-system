@@ -5,6 +5,8 @@ services:
       - SPRING_PROFILES_ACTIVE=manager
     networks:
       - raft-network
+    ports:
+      - "8080:8080"
     depends_on:  # Ensure nodes start after the manager
       - shard1-node1
       - shard1-node2
@@ -20,7 +22,7 @@ services:
     environment:
       - SPRING_PROFILES_ACTIVE=loadbalancer
     ports:
-      - "8080:8080"  # Only expose load balancer
+      - "8087:8080"  # Only expose load balancer
     networks:
       - raft-network  # Add to network
     depends_on:

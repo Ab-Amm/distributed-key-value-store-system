@@ -4,7 +4,11 @@ import com.example.distributedkeyvalue.service.KeyValueService;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Profile;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.reactive.function.client.WebClient;
+
+import java.util.Map;
 
 @RequiredArgsConstructor
 @RestController
@@ -27,5 +31,12 @@ public class KeyValueController {
     public void deleteKeyValue(@PathVariable String key) throws Exception {
         keyValueService.delete(key);
     }
+
+    @Scheduled(fixedRate = 5000)
+    public void sendHeartbeat() {
+        keyValueService.sendHeartbeat();
+    }
+
+
 
 }

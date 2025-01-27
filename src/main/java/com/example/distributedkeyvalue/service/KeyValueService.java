@@ -12,9 +12,11 @@ import org.apache.ratis.protocol.RaftPeerId;
 import org.apache.ratis.thirdparty.com.google.common.cache.Cache;
 import org.apache.ratis.thirdparty.com.google.common.cache.CacheBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.reactive.function.client.WebClient;
 
 import java.util.List;
 import java.util.Map;
@@ -22,8 +24,14 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+
+
 @Service
 public class KeyValueService {
+
+    @Value("${RAFT_NODE_ID:default-node}")
+    private String nodeId;
+
     @Autowired
     private RestTemplate restTemplate;
 
@@ -146,6 +154,13 @@ public class KeyValueService {
             throw new RuntimeException("Delete failed");
         }
     }
-
-
+    public void sendHeartbeat() {
+        WebClient.create()
+                .post()
+                .uri("http://load-balancer:8080/api/v1/health/heartbeat")
+                .bodyValue(Map.of("nodeId", nodeId, "status", "healthy"))
+                .retrieve()
+                .bodyToMono(Void.class)
+                .subscribe();
+    }
 }
