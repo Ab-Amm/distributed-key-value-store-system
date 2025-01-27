@@ -8,7 +8,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 
-@Profile("loadBalancer")
+@Profile("loadbalancer")
 @RestController
 @RequestMapping("/api/v1/health")
 public class HealthController {
@@ -23,16 +23,19 @@ public class HealthController {
     public ResponseEntity<Void> handleHeartbeat(@RequestBody Map<String, String> payload) {
         String nodeId = payload.get("nodeId");
         String status = payload.get("status");
+        boolean isHealthy = "healthy".equals(status);
 
-        LoadBalancer.NodeStatus nodeStatus = loadBalancer.nodes.getOrDefault(nodeId,
-                new LoadBalancer.NodeStatus(true, new AtomicInteger(0)));
-        if ("healthy".equals(status)) {
-            nodeStatus.healthy = true;
-        } else {
-            nodeStatus.healthy = false;
-        }
-        nodeStatus.lastHeartbeat = System.currentTimeMillis();
-        loadBalancer.nodes.put(nodeId, nodeStatus);
+        loadBalancer.nodes.compute(nodeId, (k, existingStatus) -> {
+            if (existingStatus == null) {
+                // New node: Initialize with status from payload
+                return new LoadBalancer.NodeStatus(isHealthy, new AtomicInteger(0));
+            } else {
+                // Existing node: Update health and heartbeat
+                existingStatus.healthy = isHealthy;
+                existingStatus.lastHeartbeat = System.currentTimeMillis();
+                return existingStatus;
+            }
+        });
 
         return ResponseEntity.ok().build();
     }

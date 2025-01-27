@@ -14,8 +14,6 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 
-
-
 @RestController
 @Profile("loadbalancer")
 @RequestMapping("/api/v1/keys")
@@ -66,13 +64,13 @@ public class LoadBalancerController {
                     .uri("http://shard-manager:8080/shard-manager/shard/{key}", key)
                     .retrieve()
                     .bodyToMono(ShardInfo.class)
-                    .block(Duration.ofSeconds(2)); // Timeout for shard-manager response
+                    .block(Duration.ofSeconds(2));
         } catch (Exception e) {
             throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "Shard manager is unavailable", e);
         }
 
         String targetNode = loadBalancer.getShardAwareNode(shardInfo.shardId());
-        loadBalancer.incrementConnections(targetNode);
+        loadBalancer.incrementConnections(targetNode); // Moved inside try block
 
         try {
             return processor.process(targetNode);

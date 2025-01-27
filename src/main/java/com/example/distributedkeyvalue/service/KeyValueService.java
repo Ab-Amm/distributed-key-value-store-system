@@ -155,10 +155,11 @@ public class KeyValueService {
         }
     }
     public void sendHeartbeat() {
+        String nodeUrl = "http://" + nodeId + ":8080";
         WebClient.create()
                 .post()
                 .uri("http://load-balancer:8080/api/v1/health/heartbeat")
-                .bodyValue(Map.of("nodeId", nodeId, "status", "healthy"))
+                .bodyValue(Map.of("nodeId", nodeUrl, "status", "healthy"))
                 .retrieve()
                 .bodyToMono(Void.class)
                 .subscribe();
