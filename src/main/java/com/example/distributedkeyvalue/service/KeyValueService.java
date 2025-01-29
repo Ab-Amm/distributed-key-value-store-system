@@ -6,11 +6,16 @@ import com.example.distributedkeyvalue.model.commands.GetCommand;
 import com.example.distributedkeyvalue.model.commands.PutCommand;
 import com.example.distributedkeyvalue.model.ShardInfo;
 import org.apache.ratis.client.RaftClient;
+import org.apache.ratis.client.RaftClientRpc;
+import org.apache.ratis.conf.RaftProperties;
+import org.apache.ratis.grpc.GrpcFactory;
+import org.apache.ratis.protocol.ClientId;
 import org.apache.ratis.protocol.RaftClientReply;
 import org.apache.ratis.protocol.RaftPeer;
 import org.apache.ratis.protocol.RaftPeerId;
 import org.apache.ratis.thirdparty.com.google.common.cache.Cache;
 import org.apache.ratis.thirdparty.com.google.common.cache.CacheBuilder;
+import org.apache.ratis.thirdparty.com.google.protobuf.ByteString;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -18,6 +23,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.reactive.function.client.WebClient;
 
+import java.security.MessageDigest;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -42,12 +48,35 @@ public class KeyValueService {
 
     private final Map<String, RaftClient> clientCache = new ConcurrentHashMap<>();
 
+    @Autowired
+    private RaftProperties raftProperties;
+
+    @Autowired
+    private GrpcFactory grpcFactory;
+
+    private ByteString get16ByteHash(String input) throws Exception {
+        MessageDigest md = MessageDigest.getInstance("SHA-256");
+        byte[] hash = md.digest(input.getBytes());
+        return ByteString.copyFrom(hash, 0, 16);
+    }
+
     private RaftClient getClient(String shardId, List<RaftPeer> peers) {
-        return clientCache.computeIfAbsent(shardId, id ->
-                RaftClient.newBuilder()
+        return clientCache.computeIfAbsent(shardId, id -> {
+            try {
+                ByteString clientIdBytes = get16ByteHash(nodeId + "-" + shardId);
+                ClientId clientId = ClientId.valueOf(clientIdBytes);
+                RaftClientRpc clientRpc = grpcFactory.newRaftClientRpc(clientId, raftProperties);
+
+                return RaftClient.newBuilder()
+                        .setProperties(raftProperties)
+                        .setClientRpc(clientRpc)
                         .setRaftGroup(RaftConfig.getRaftGroup(id, peers))
-                        .build()
-        );
+                        .setClientId(clientId)
+                        .build();
+            } catch (Exception e) {
+                throw new RuntimeException("Failed to create RaftClient for shard " + shardId, e);
+            }
+        });
     }
 
     public void put(String key, String value) throws Exception {

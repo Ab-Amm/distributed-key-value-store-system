@@ -43,6 +43,19 @@ public class RaftClientConfig {
 
 
     @Bean
+    public RaftProperties raftProperties() {
+        final RaftProperties properties = new RaftProperties();
+        GrpcConfigKeys.setMessageSizeMax(properties, SizeInBytes.valueOf("64MB"));
+        GrpcConfigKeys.setFlowControlWindow(properties, SizeInBytes.valueOf("4MB"));
+        return properties;
+    }
+
+    @Bean
+    public GrpcFactory grpcFactory() {
+        return new GrpcFactory(new Parameters());
+    }
+
+    @Bean
     public RaftGroup raftGroup() {
         return RaftGroup.valueOf(
                 RaftConfig.getRaftGroupId(shardId),
@@ -58,38 +71,6 @@ public class RaftClientConfig {
         );
     }
 
-
-    private ByteString get16ByteHash(String input) throws Exception {
-        MessageDigest md = MessageDigest.getInstance("SHA-256");
-        byte[] hash = md.digest(input.getBytes());
-        return ByteString.copyFrom(hash, 0, 16);
-    }
-
-    @Bean
-    public RaftClient raftClient(RaftGroup raftGroup) throws Exception {
-        // Initialize RaftProperties
-        final RaftProperties properties = new RaftProperties();
-        GrpcConfigKeys.setMessageSizeMax(properties, SizeInBytes.valueOf("64MB"));
-        GrpcConfigKeys.setFlowControlWindow(properties, SizeInBytes.valueOf("4MB"));
-
-        // Generate ClientId
-        ByteString clientIdBytes = get16ByteHash(raftNodeId);
-        ClientId clientId = ClientId.valueOf(clientIdBytes);
-
-        // Initialize GrpcFactory with required parameters
-        GrpcFactory grpcFactory = new GrpcFactory(new Parameters());
-
-        // Initialize RaftClientRpc
-        RaftClientRpc clientRpc = grpcFactory.newRaftClientRpc(clientId, properties);
-
-        // Configure and build the RaftClient
-        return RaftClient.newBuilder()
-                .setProperties(properties)
-                .setClientRpc(clientRpc)
-                .setRaftGroup(raftGroup)
-                .setClientId(clientId)
-                .build();
-    }
 
 
 
