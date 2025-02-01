@@ -1,13 +1,13 @@
 services:
   shard-manager:
-    image: distributedkeyvalue_v3:latest  # Same image as nodes
+    image: distributedkeyvalue_v3:latest
     environment:
       - SPRING_PROFILES_ACTIVE=manager
     networks:
       - raft-network
     ports:
       - "8080:8080"
-    depends_on:  # Ensure nodes start after the manager
+    depends_on:
       - shard1-node1
       - shard1-node2
       - shard1-node3
@@ -16,15 +16,14 @@ services:
       - shard2-node3
 
 
-  # Fix port conflict and typo
-  load-balancer:  # Corrected service name
+  load-balancer:
     image: distributedkeyvalue_v3:latest
     environment:
       - SPRING_PROFILES_ACTIVE=loadbalancer
     ports:
-      - "8087:8080"  # Only expose load balancer
+      - "8087:8080"
     networks:
-      - raft-network  # Add to network
+      - raft-network
     depends_on:
       - shard-manager
 
@@ -33,7 +32,7 @@ services:
   shard1-node1:
     image: distributedkeyvalue_v3:latest
     environment:
-      - SPRING_PROFILES_ACTIVE=node  # Activate "node" profile
+      - SPRING_PROFILES_ACTIVE=node
       - SHARD_ID=shard1
       - RAFT_NODE_ID=shard1-node1
       - RAFT_PEERS=shard1-node1:shard1-node1:9870,shard1-node2:shard1-node2:9870,shard1-node3:shard1-node3:9870
@@ -47,7 +46,7 @@ services:
   shard1-node2:
     image: distributedkeyvalue_v3:latest
     environment:
-      - SPRING_PROFILES_ACTIVE=node  # Activate "node" profile
+      - SPRING_PROFILES_ACTIVE=node
       - SHARD_ID=shard1
       - RAFT_NODE_ID=shard1-node2
       - RAFT_PEERS=shard1-node1:shard1-node1:9870,shard1-node2:shard1-node2:9870,shard1-node3:shard1-node3:9870
@@ -61,7 +60,7 @@ services:
   shard1-node3:
     image: distributedkeyvalue_v3:latest
     environment:
-      - SPRING_PROFILES_ACTIVE=node  # Activate "node" profile
+      - SPRING_PROFILES_ACTIVE=node
       - SHARD_ID=shard1
       - RAFT_NODE_ID=shard1-node3
       - RAFT_PEERS=shard1-node1:shard1-node1:9870,shard1-node2:shard1-node2:9870,shard1-node3:shard1-node3:9870
@@ -72,11 +71,11 @@ services:
     networks:
       - raft-network
 
-  # Shard2 Nodes (similar to Shard1)
+
   shard2-node1:
     image: distributedkeyvalue_v3:latest
     environment:
-      - SPRING_PROFILES_ACTIVE=node  # Activate "node" profile
+      - SPRING_PROFILES_ACTIVE=node
       - SHARD_ID=shard2
       - RAFT_NODE_ID=shard2-node1
       - RAFT_PEERS=shard2-node1:shard2-node1:9870,shard2-node2:shard2-node2:9870,shard2-node3:shard2-node3:9870
@@ -90,7 +89,7 @@ services:
   shard2-node2:
     image: distributedkeyvalue_v3:latest
     environment:
-      - SPRING_PROFILES_ACTIVE=node  # Activate "node" profile
+      - SPRING_PROFILES_ACTIVE=node
       - SHARD_ID=shard2
       - RAFT_NODE_ID=shard2-node2
       - RAFT_PEERS=shard2-node1:shard2-node1:9870,shard2-node2:shard2-node2:9870,shard2-node3:shard2-node3:9870
@@ -104,7 +103,7 @@ services:
   shard2-node3:
     image: distributedkeyvalue_v3:latest
     environment:
-      - SPRING_PROFILES_ACTIVE=node  # Activate "node" profile
+      - SPRING_PROFILES_ACTIVE=node
       - SHARD_ID=shard2
       - RAFT_NODE_ID=shard2-node3
       - RAFT_PEERS=shard2-node1:shard2-node1:9870,shard2-node2:shard2-node2:9870,shard2-node3:shard2-node3:9870
