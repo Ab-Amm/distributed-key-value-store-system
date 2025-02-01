@@ -17,20 +17,9 @@ public class LoadBalancer {
     public void init() {
         initializeNodes();
         scheduleStaleNodeCleanup();
-    }
+    } 
 
     private void initializeNodes() {
-//        List<String> initialNodes = List.of(
-//                "http://shard1-node1:8080",
-//                "http://shard1-node2:8080",
-//                "http://shard1-node3:8080",
-//                "http://shard2-node1:8080",
-//                "http://shard2-node2:8080",
-//                "http://shard2-node3:8080"
-//        );
-//        initialNodes.forEach(node ->
-//                nodes.put(node, new NodeStatus(true, new AtomicInteger(0)))
-//        );
     }
 
 

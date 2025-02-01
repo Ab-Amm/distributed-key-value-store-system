@@ -33,7 +33,7 @@ logs:
 # Run basic smoke tests
 test: start
 	@echo "\nWaiting for cluster to initialize..."
-	sleep 10
+	sleep 60
 	@echo "\nRunning smoke tests..."
 	./test-smoke.sh
 	@echo "\nTests completed."
