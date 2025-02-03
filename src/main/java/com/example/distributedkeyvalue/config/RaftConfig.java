@@ -36,20 +36,20 @@ public class RaftConfig {
         final RaftProperties props = new RaftProperties();
 
         // Set longer timeouts for Docker environments
-        RaftServerConfigKeys.Rpc.setTimeoutMin(props, TimeDuration.valueOf(10000, TimeUnit.MILLISECONDS));
+        RaftServerConfigKeys.Rpc.setTimeoutMin(props, TimeDuration.valueOf(5000, TimeUnit.MILLISECONDS));
         RaftServerConfigKeys.Rpc.setTimeoutMax(props, TimeDuration.valueOf(15000, TimeUnit.MILLISECONDS));
-        RaftServerConfigKeys.LeaderElection.setLeaderStepDownWaitTime(props, TimeDuration.valueOf(2, TimeUnit.MINUTES));
+        RaftServerConfigKeys.LeaderElection.setLeaderStepDownWaitTime(props, TimeDuration.valueOf(30, TimeUnit.SECONDS));
 
 
         RaftServerConfigKeys.Snapshot.setAutoTriggerEnabled(props, true);
-        RaftServerConfigKeys.Snapshot.setAutoTriggerThreshold(props, 50);
+        RaftServerConfigKeys.Snapshot.setAutoTriggerThreshold(props, 500);
         RaftServerConfigKeys.Snapshot.setCreationGap(props, 50);
 
-        props.set("raft.server.leader.election.heartbeat.interval", "2000");
+        props.set("ratis.server.leader.heartbeat.interval", "2000");
 
 
 
-        RaftServerConfigKeys.Rpc.setRequestTimeout(props, TimeDuration.valueOf(30, TimeUnit.SECONDS));
+        RaftServerConfigKeys.Rpc.setRequestTimeout(props, TimeDuration.valueOf(60, TimeUnit.SECONDS));
 
 
 
