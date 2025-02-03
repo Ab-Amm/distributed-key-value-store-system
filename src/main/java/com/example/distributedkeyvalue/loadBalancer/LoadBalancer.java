@@ -87,12 +87,22 @@ public class LoadBalancer {
                 .ifPresent(status -> status.activeConnections.decrementAndGet());
     }
 
+    // In LoadBalancer.java
+    public void updateHealthStatus(String nodeUrl) {
+        NodeStatus status = nodes.get(nodeUrl);
+        if (status != null) {
+            // Increase health check tolerance
+            status.lastHeartbeat = System.currentTimeMillis();
+            status.healthy = true; // Assume healthy until proven otherwise
+        }
+    }
+
+    // Modify cleanup to be less aggressive
     private void removeStaleNodes() {
         long now = System.currentTimeMillis();
-        nodes.entrySet().removeIf(entry -> {
-            NodeStatus status = entry.getValue();
-            return (now - status.lastHeartbeat) > 15_000;
-        });
+        nodes.entrySet().removeIf(entry ->
+                (now - entry.getValue().lastHeartbeat) > 30_000 // 30s → from 15s
+        );
     }
     private void scheduleStaleNodeCleanup() {
         healthCheckExecutor.scheduleAtFixedRate(

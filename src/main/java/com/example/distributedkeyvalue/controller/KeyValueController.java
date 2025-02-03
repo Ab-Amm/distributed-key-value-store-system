@@ -34,7 +34,7 @@ public class KeyValueController {
         keyValueService.delete(key);
     }
 
-    @Scheduled(fixedRate = 5000)
+    @Scheduled(fixedRate = 10000)
     public void sendHeartbeat() {
         keyValueService.sendHeartbeat();
     }

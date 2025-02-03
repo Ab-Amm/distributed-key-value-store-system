@@ -27,7 +27,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '1.0'     # Reduced from 2.0
+          cpus: '1.5'     # Reduced from 2.0
           memory: '512M'  # Reduced from 1GB
         reservations:
           cpus: '0.5'

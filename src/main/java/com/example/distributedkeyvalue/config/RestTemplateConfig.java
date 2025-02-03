@@ -46,8 +46,8 @@ public class RestTemplateConfig {
     @Getter
     @Setter
     public static class HttpPoolProperties {
-        private int maxTotal = 1000;
-        private int maxPerRoute = 200;
-        private int idleTimeout = 30;
+        private int maxTotal = 400;
+        private int maxPerRoute = 100;
+        private int idleTimeout = 10;
     }
 }
