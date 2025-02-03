@@ -15,7 +15,7 @@ build:
 	$(DOCKER_CMD) build -t $(PROJECT_NAME):$(VERSION) .
 
 # Start the cluster
-start: build
+start: #build
 	@echo "\nStarting cluster... "
 	$(DOCKER_COMPOSE_CMD) up -d
 	@echo "\nCluster started. Use 'make logs' to view logs."
@@ -31,9 +31,9 @@ logs:
 	$(DOCKER_COMPOSE_CMD) logs -f
 
 # Run basic smoke tests
-test: start
-	@echo "\nWaiting for cluster to initialize..."
-	sleep 60
+test: #start
+#	@echo "\nWaiting for cluster to initialize..."
+#	sleep 60
 	@echo "\nRunning smoke tests..."
 	./test-smoke.sh
 	@echo "\nTests completed."

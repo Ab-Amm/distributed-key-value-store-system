@@ -14,6 +14,7 @@ import org.apache.ratis.util.TimeDuration;
 
 
 import java.io.File;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
@@ -23,8 +24,11 @@ import java.util.stream.Collectors;
 public class RaftConfig {
     private static final String RAFT_GROUP_ID = "kv-store-raft-group";
 
+    // In RaftConfig.java
     public static RaftGroup getRaftGroup(String shardId, List<RaftPeer> peers) {
-        UUID clusterId = UUID.nameUUIDFromBytes(shardId.getBytes());
+        // Use shardId to create unique group ID
+        UUID clusterId = UUID.nameUUIDFromBytes(shardId.getBytes(StandardCharsets.UTF_8));
+        System.out.println("Raft group ID: " + clusterId + " for shard: " + shardId);
         return RaftGroup.valueOf(RaftGroupId.valueOf(clusterId), peers);
     }
 
@@ -32,9 +36,16 @@ public class RaftConfig {
         final RaftProperties props = new RaftProperties();
 
         // Set longer timeouts for Docker environments
-        RaftServerConfigKeys.Rpc.setTimeoutMin(props, TimeDuration.valueOf(1500, TimeUnit.MILLISECONDS));
-        RaftServerConfigKeys.Rpc.setTimeoutMax(props, TimeDuration.valueOf(3000, TimeUnit.MILLISECONDS));
+        RaftServerConfigKeys.Rpc.setTimeoutMin(props, TimeDuration.valueOf(5000, TimeUnit.MILLISECONDS));
+        RaftServerConfigKeys.Rpc.setTimeoutMax(props, TimeDuration.valueOf(15000, TimeUnit.MILLISECONDS));
         RaftServerConfigKeys.LeaderElection.setLeaderStepDownWaitTime(props, TimeDuration.valueOf(30, TimeUnit.SECONDS));
+
+
+        RaftServerConfigKeys.Snapshot.setAutoTriggerEnabled(props, true);
+        RaftServerConfigKeys.Snapshot.setAutoTriggerThreshold(props, 200);
+
+        RaftServerConfigKeys.Rpc.setRequestTimeout(props, TimeDuration.valueOf(90, TimeUnit.SECONDS));
+
 
 
         // Parse peers into id, host, port

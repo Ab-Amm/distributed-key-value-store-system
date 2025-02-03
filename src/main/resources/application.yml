@@ -4,6 +4,10 @@ spring:
   profiles:
     active: node  # Default profile (for nodes)
 
+
+debug: true
+
+
 raft:
   cluster:
     group-id: kv-store-group
@@ -18,9 +22,19 @@ server:
   port: ${SERVER_PORT:8080}
 
 
+
 shard:
   registration:
     enabled: true
+
+http:
+  pool:
+    max-total: 200          # Total connections across all nodes
+    default-max-per-route: 50 # Connections per node
+    validate-after-inactivity: 5000 # ms
+  timeouts:
+    socket: 5000            # ms
+    connect: 3000           # ms
 
 ---
 spring:

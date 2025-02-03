@@ -3,6 +3,7 @@ package com.example.distributedkeyvalue.controller;
 import com.example.distributedkeyvalue.model.ShardInfo;
 import com.example.distributedkeyvalue.model.ShardRegistrationRequest;
 import org.springframework.context.annotation.Profile;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
@@ -22,6 +23,11 @@ public class ShardManagerController {
 
     @GetMapping("/shard/{key}")
     public ResponseEntity<ShardInfo> getShardForKey(@PathVariable String key) {
+        if (shardRing.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                    .body(new ShardInfo("NO_SHARDS", List.of()));
+        }
+
         long hash = hash(key); // e.g., SHA-256
         Map.Entry<Long, String> entry = shardRing.ceilingEntry(hash);
         String shardId = entry != null ? entry.getValue() : shardRing.firstEntry().getValue();

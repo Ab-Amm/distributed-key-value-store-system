@@ -13,7 +13,7 @@ log_cmd() {
 
 # Helper function to log informational messages
 log_info() {
-    echo -e "${YELLOW}[INFO] $1${NC}"
+    echo -e "${NC}[INFO] $1${NC}"
 }
 
 # Helper function to log successes
@@ -52,9 +52,6 @@ TEST_VALUE1="apple"
 TEST_KEY2="vehicle"
 TEST_VALUE2="truck"
 
-echo -e "\n${YELLOW}========== Starting Distributed System Smoke Tests ==========${NC}\n"
-echo
-echo
 # Test 1: Verify Shard Mapping
 log_info "Testing Shard Mapping..."
 log_cmd "curl -s \"$SHARD_MANAGER/shard-manager/shard/$TEST_KEY1\" | jq -r '.shardId'"
@@ -91,7 +88,7 @@ for i in "${!SHARD1_NODES[@]}"; do
     log_cmd "curl -s \"$node/internal/api/v1/keys/$TEST_KEY1\""
     response=$(curl -s "$node/internal/api/v1/keys/$TEST_KEY1")
     check_response "$response" "$TEST_VALUE1"
-    log_success "$name ($node) has the correct value for '$TEST_KEY1'"
+    log_success "$name ($node) has the correct value for '$TEST_KEY1', response: $response"
 done
 
 echo
@@ -104,7 +101,7 @@ for i in "${!SHARD2_NODES[@]}"; do
     log_cmd "curl -s \"$node/internal/api/v1/keys/$TEST_KEY2\""
     response=$(curl -s "$node/internal/api/v1/keys/$TEST_KEY2")
     check_response "$response" "$TEST_VALUE2"
-    log_success "$name ($node) has the correct value for '$TEST_KEY2'"
+    log_success "$name ($node) has the correct value for '$TEST_KEY2', response: $response"
 done
 
 echo
@@ -199,7 +196,7 @@ log_info "Verifying Data Persistence..."
 log_cmd "curl -s \"$LB_URL/api/v1/keys/$TEST_KEY1\""
 response=$(curl -s "$LB_URL/api/v1/keys/$TEST_KEY1")
 check_response "$response" "$TEST_VALUE1"
-log_success "$response -Data persisted after leader failure!"
+log_success "response: $response - Data persisted after leader failure!"
 
 echo
 echo
@@ -215,6 +212,6 @@ if [[ "$REJOIN_STATUS" != "FOLLOWER" ]]; then
     log_error "Failed leader did not rejoin as follower! Status: $REJOIN_STATUS"
     exit 1
 fi
-log_success "Node ($FAILED_LEADER_NAME) rejoined cluster successfully!"
+log_success "Node ($FAILED_LEADER_NAME) rejoined cluster successfully! With rejoin status: $REJOIN_STATUS"
 
 echo -e "\n${GREEN}========== All Smoke Tests Passed! ==========${NC}\n"

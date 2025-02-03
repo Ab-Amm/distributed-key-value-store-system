@@ -24,6 +24,14 @@ services:
       - "8087:8080"
     networks:
       - raft-network
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'     # Reduced from 2.0
+          memory: '512M'  # Reduced from 1GB
+        reservations:
+          cpus: '0.5'
+          memory: '384M'
     depends_on:
       - shard-manager
 
@@ -42,6 +50,14 @@ services:
       - "9871:9870"
     networks:
       - raft-network
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: '256M'  # Reduced from 512MB
+        reservations:
+          cpus: '0.2'
+          memory: '128M'
 
   shard1-node2:
     image: distributedkeyvalue_v3:latest
@@ -56,6 +72,14 @@ services:
       - "9872:9870"
     networks:
       - raft-network
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'     # Reduced from 0.75
+          memory: '256M'  # Reduced from 512MB
+        reservations:
+          cpus: '0.2'
+          memory: '128M'
 
   shard1-node3:
     image: distributedkeyvalue_v3:latest
@@ -70,6 +94,14 @@ services:
       - "9873:9870"
     networks:
       - raft-network
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'     # Reduced from 0.75
+          memory: '256M'  # Reduced from 512MB
+        reservations:
+          cpus: '0.2'
+          memory: '128M'
 
 
   shard2-node1:
@@ -85,6 +117,14 @@ services:
       - "9874:9870"
     networks:
       - raft-network
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'     # Reduced from 0.75
+          memory: '256M'  # Reduced from 512MB
+        reservations:
+          cpus: '0.2'
+          memory: '128M'
 
   shard2-node2:
     image: distributedkeyvalue_v3:latest
@@ -99,6 +139,14 @@ services:
       - "9875:9870"
     networks:
       - raft-network
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'     # Reduced from 0.75
+          memory: '256M'  # Reduced from 512MB
+        reservations:
+          cpus: '0.2'
+          memory: '128M'
 
   shard2-node3:
     image: distributedkeyvalue_v3:latest
@@ -113,6 +161,14 @@ services:
       - "9876:9870"
     networks:
       - raft-network
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'     # Reduced from 0.75
+          memory: '256M'  # Reduced from 512MB
+        reservations:
+          cpus: '0.2'
+          memory: '128M'
 
 networks:
   raft-network:

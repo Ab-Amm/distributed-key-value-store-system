@@ -70,7 +70,7 @@ public class KeyValueService {
                 return RaftClient.newBuilder()
                         .setProperties(raftProperties)
                         .setClientRpc(clientRpc)
-                        .setRaftGroup(RaftConfig.getRaftGroup(id, peers))
+                        .setRaftGroup(RaftConfig.getRaftGroup(shardId, peers))
                         .setClientId(clientId)
                         .build();
             } catch (Exception e) {
@@ -183,6 +183,9 @@ public class KeyValueService {
             throw new RuntimeException("Delete failed");
         }
     }
+
+
+
     public void sendHeartbeat() {
         String nodeUrl = "http://" + nodeId + ":8080";
         WebClient.create()

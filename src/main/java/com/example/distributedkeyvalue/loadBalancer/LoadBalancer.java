@@ -1,6 +1,8 @@
 package com.example.distributedkeyvalue.loadBalancer;
 
+import lombok.Data;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestTemplate;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
@@ -8,10 +10,13 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
+@Data
 @Component
 public class LoadBalancer {
     public final Map<String, NodeStatus> nodes = new ConcurrentHashMap<>();
     private final ScheduledExecutorService healthCheckExecutor = Executors.newScheduledThreadPool(1);
+
+    private final RestTemplate restTemplate = new RestTemplate();
 
     @PostConstruct
     public void init() {
@@ -36,19 +41,36 @@ public class LoadBalancer {
     }
 
 
-    public String getShardAwareNode(String shardId) {
+    public String getShardAwareNode(String shardId, boolean isWrite) {
         return nodes.entrySet().stream()
                 .filter(entry -> {
-                    String nodeUrl = entry.getKey();
-                    String nodeShardId = extractShardIdFromUrl(nodeUrl);
-                    return entry.getValue().healthy && nodeShardId.equals(shardId);
+                    if (!entry.getValue().healthy ||
+                            !extractShardIdFromUrl(entry.getKey()).equals(shardId)) {
+                        return false;
+                    }
+                    if (isWrite) {
+                        // Call LeaderController to check leadership
+                        String leaderStatus = restTemplate.getForObject(
+                                entry.getKey() + "/leader/" + shardId,
+                                String.class
+                        );
+                        System.out.println("Routing " + "WRITE"
+                                + " for shard " + shardId);
+                        return "LEADER".equals(leaderStatus);
+                    }
+
+                    System.out.println("Routing " + "READ"
+                            + " for shard " + shardId);
+                    return true; // Reads can go to any node
                 })
                 .min(Comparator.comparingInt(entry -> entry.getValue().activeConnections.get()))
-                .map(Map.Entry::getKey) // Extract node URL from the entry
-                .orElseThrow(() -> new IllegalStateException("No healthy nodes for shard: " + shardId));
+                .map(Map.Entry::getKey)
+                .orElseThrow(() -> new RuntimeException("No healthy nodes available"));
     }
 
-    private String extractShardIdFromUrl(String nodeUrl) {
+
+
+    public String extractShardIdFromUrl(String nodeUrl) {
         // Example: Extract "shard1" from "http://shard1-node1:8080"
         return nodeUrl.replace("http://", "")
                 .split("-")[0];

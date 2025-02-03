@@ -60,14 +60,14 @@ public class RaftInitializer {
     public CommandLineRunner registerWithShardManager() {
         return args -> {
             int attempts = 0;
-            while (attempts < 5) {
+            while (true) {
                 try {
 
                     List<String> raftNodes = Arrays.asList(peers.split(","));
                     List<String> restNodes = Arrays.stream(peers.split(","))
                             .map(peer -> {
                                 String[] parts = peer.split(":", 3);
-                                return parts[1] + ":8080"; // REST port
+                                return "http://" +parts[1] + ":8080"; // REST port
                             })
                             .collect(Collectors.toList());
 
@@ -80,7 +80,8 @@ public class RaftInitializer {
                     break;
                 } catch (Exception e) {
                     attempts++;
-                    Thread.sleep(3000);
+                    System.err.println("Registration failed, retrying in 5s...");
+                    Thread.sleep(5000);
                 }
             }
 
